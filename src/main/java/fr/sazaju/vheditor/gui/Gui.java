@@ -29,6 +29,8 @@ import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
@@ -110,6 +112,7 @@ public class Gui extends JFrame {
 			}
 		};
 		configureTools(toolPanel, provider);
+		configureMenus(provider);
 
 		JPanel translationPanel = new JPanel();
 		translationPanel.setLayout(new GridBagLayout());
@@ -141,6 +144,16 @@ public class Gui extends JFrame {
 		pack();
 
 		finalizeConfig(rootSplit);
+	}
+
+	private void configureMenus(ToolProvider provider) {
+		JMenuBar menubar = new JMenuBar();
+		setJMenuBar(menubar);
+
+		JMenu menu = new JMenu("Tools");
+		menubar.add(menu);
+
+		// TODO add menus
 	}
 
 	private void configureTools(final ToolPanel toolPanel,

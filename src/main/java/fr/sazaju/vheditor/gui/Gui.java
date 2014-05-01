@@ -40,6 +40,7 @@ import javax.swing.ToolTipManager;
 import javax.swing.WindowConstants;
 import javax.swing.border.EtchedBorder;
 
+import fr.sazaju.vheditor.gui.tool.OCR;
 import fr.sazaju.vheditor.gui.tool.Search;
 import fr.sazaju.vheditor.gui.tool.ToolProvider;
 
@@ -153,7 +154,19 @@ public class Gui extends JFrame {
 		JMenu menu = new JMenu("Tools");
 		menubar.add(menu);
 
-		// TODO add menus
+		final OCR ocr = new OCR();
+		menu.add(new AbstractAction(ocr.getTitle()) {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				JFrame frame = new JFrame(ocr.getTitle());
+				frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				frame.setLayout(new GridLayout());
+				frame.add(ocr.instantiatePanel());
+				frame.pack();
+				frame.setVisible(true);
+			}
+		});
 	}
 
 	private void configureTools(final ToolPanel toolPanel,

@@ -20,11 +20,14 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Properties;
 
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
+import javax.swing.ImageIcon;
 import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -86,6 +89,14 @@ public class Gui extends JFrame {
 		setTitle("VH Translation Tool");
 		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE);
+		try {
+			setIconImage(new ImageIcon(getClass().getClassLoader()
+					.getResource("icon.png").toURI().toURL()).getImage());
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
 
 		final MapListPanel listPanel = new MapListPanel();
 		final MapContentPanel mapPanel = new MapContentPanel();

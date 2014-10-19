@@ -6,9 +6,9 @@ import fr.vergne.parsing.layer.standard.Loop.Generator;
 import fr.vergne.parsing.layer.standard.Suite;
 import fr.vergne.parsing.layer.util.Newline;
 
-public class EndLine extends Suite {
+public class EndFlag extends Suite {
 
-	public EndLine() {
+	public EndFlag() {
 		super(new Atom("# END STRING"), new Loop<Newline>(
 				new Generator<Newline>() {
 

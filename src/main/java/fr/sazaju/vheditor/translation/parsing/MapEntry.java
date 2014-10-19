@@ -10,21 +10,61 @@ import fr.vergne.parsing.layer.standard.Suite;
 public class MapEntry extends Suite implements TranslationEntry {
 
 	public MapEntry() {
-		super(new StartLine(), new Option<UntranslatedLine>(
-				new UntranslatedLine()), new ContextLine(),
+		super(new StartFlag(), new Option<UntranslatedFlag>(
+				new UntranslatedFlag()), new ContextLine(),
 				new Option<AdviceLine>(new AdviceLine()), new ContentBlock(),
-				new TranslationLine(), new ContentBlock(), new EndLine());
+				new TranslationFlag(), new ContentBlock(), new EndFlag());
+	}
+
+	public StartFlag getStartFlag() {
+		return this.<StartFlag>get(0);
+	}
+	
+	public boolean hasUntranslatedFlag() {
+		return this.<Option<UntranslatedFlag>>get(1).isPresent();
+	}
+	
+	public UntranslatedFlag getUntranslatedFlag() {
+		return this.<Option<UntranslatedFlag>>get(1).getOption();
+	}
+
+	public ContextLine getContextLine() {
+		return this.<ContextLine>get(2);
+	}
+
+	public boolean hasAdvice() {
+		return this.<Option<AdviceLine>>get(3).isPresent();
+	}
+	
+	public AdviceLine getAdvice() {
+		return this.<Option<AdviceLine>>get(3).getOption();
+	}
+
+	public ContentBlock getJapaneseBlock() {
+		return this.<ContentBlock>get(4);
+	}
+
+	public TranslationFlag getTranslationFlag() {
+		return this.<TranslationFlag>get(5);
+	}
+	
+	public ContentBlock getEnglishBlock() {
+		return this.<ContentBlock>get(6);
+	}
+
+	public EndFlag getEndFlag() {
+		return this.<EndFlag>get(7);
 	}
 	
 	@Override
 	public void setMarkedAsUntranslated(boolean isMarkedAsUntranslated) {
-		Option<UntranslatedLine> option = get(1);
+		Option<UntranslatedFlag> option = get(1);
 		option.setContent(isMarkedAsUntranslated ? "# UNTRANSLATED\n" : "");
 	}
 
 	@Override
 	public boolean isMarkedAsUntranslated() {
-		Option<UntranslatedLine> option = get(1);
+		Option<UntranslatedFlag> option = get(1);
 		return option.isPresent();
 	}
 

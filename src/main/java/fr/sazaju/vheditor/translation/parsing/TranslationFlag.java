@@ -4,9 +4,9 @@ import fr.vergne.parsing.layer.standard.Atom;
 import fr.vergne.parsing.layer.standard.Suite;
 import fr.vergne.parsing.layer.util.Newline;
 
-public class UntranslatedLine extends Suite {
+public class TranslationFlag extends Suite {
 
-	public UntranslatedLine() {
-		super(new Atom("# UNTRANSLATED"), new Newline());
+	public TranslationFlag() {
+		super(new Atom("# TRANSLATION "), new Newline());
 	}
 }

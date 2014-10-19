@@ -1,5 +1,8 @@
 package fr.sazaju.vheditor.translation.parsing;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import fr.vergne.parsing.layer.standard.GreedyMode;
 import fr.vergne.parsing.layer.standard.Loop;
 
@@ -15,4 +18,13 @@ public class EntryLoop extends Loop<MapEntry> {
 		});
 		setMode(GreedyMode.POSSESSIVE);
 	}
+
+	public List<MapEntry> toList() {
+		List<MapEntry> list = new LinkedList<MapEntry>();
+		for (MapEntry mapEntry : this) {
+			list.add(mapEntry);
+		}
+		return list;
+	}
+
 }

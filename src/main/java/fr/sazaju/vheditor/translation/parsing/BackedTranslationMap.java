@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.apache.commons.io.FileUtils;
@@ -93,6 +94,32 @@ public class BackedTranslationMap extends Suite implements TranslationMap {
 		setContent(FileUtils.readFileToString(file));
 	}
 
+	public MapHeader getHeader() {
+		return this.<MapHeader> get(0);
+	}
+
+	public List<MapEntry> getUsedEntries() {
+		EntryLoop usedEntries = get(1);
+		return usedEntries.toList();
+	}
+
+	public boolean hasUnusedEntries() {
+		Option<Suite> option = get(2);
+		return option.isPresent();
+	}
+
+	public UnusedTransLine getUnusedEntriesSeparator() {
+		Option<Suite> option = get(2);
+		Suite suite = option.getOption();
+		return suite.get(0);
+	}
+
+	public List<MapEntry> getUnusedEntries() {
+		Option<Suite> option = get(2);
+		EntryLoop unusedEntries = option.getOption().get(1);
+		return unusedEntries.toList();
+	}
+
 	@Override
 	public TranslationEntry getUsedEntry(int index) {
 		EntryLoop usedEntries = get(1);
@@ -136,4 +163,5 @@ public class BackedTranslationMap extends Suite implements TranslationMap {
 			throw new RuntimeException(e);
 		}
 	}
+
 }

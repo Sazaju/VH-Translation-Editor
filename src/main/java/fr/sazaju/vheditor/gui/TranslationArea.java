@@ -30,6 +30,7 @@ import fr.sazaju.vheditor.translation.TranslationEntry;
 
 
 @SuppressWarnings("serial")
+// FIXME make it generic for editable areas
 public class TranslationArea extends JTextArea {
 
 	private static final String ACTION_UNDO = "undo";

@@ -14,12 +14,13 @@ import javax.swing.border.EtchedBorder;
 import fr.sazaju.vheditor.translation.TranslationEntry;
 
 @SuppressWarnings("serial")
-public class TranslationTag extends JPanel {
+// FIXME make it generic for optional lines
+public class UntranslatedTag extends JPanel {
 
 	private final TranslationEntry entry;
 	private boolean isMarked;
 
-	public TranslationTag(final TranslationEntry entry) {
+	public UntranslatedTag(final TranslationEntry entry) {
 		this.entry = entry;
 		this.isMarked = entry.isMarkedAsUntranslated();
 

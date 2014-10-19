@@ -4,13 +4,14 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-public class TranslationLineTest {
+public class EndFlagTest {
 
 	@Test
 	public void testSetGetContent() {
-		TranslationLine trans = new TranslationLine();
+		EndFlag end = new EndFlag();
+		end.setContent("# END STRING");
 		for (String newline : Arrays.asList("\n", "\r", "\n\r", "\r\n")) {
-			trans.setContent("# TRANSLATION " + newline);
+			end.setContent("# END STRING" + newline);
 		}
 	}
 

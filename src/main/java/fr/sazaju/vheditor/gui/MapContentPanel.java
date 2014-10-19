@@ -2,18 +2,18 @@ package fr.sazaju.vheditor.gui;
 
 import java.awt.CardLayout;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
@@ -22,18 +22,16 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 
-import org.apache.commons.lang3.ArrayUtils;
-
-import fr.sazaju.vheditor.gui.GuiBuilder.EntryPanel;
 import fr.sazaju.vheditor.translation.TranslationEntry;
 import fr.sazaju.vheditor.translation.TranslationMap;
 import fr.sazaju.vheditor.translation.parsing.BackedTranslationMap;
 import fr.sazaju.vheditor.translation.parsing.BackedTranslationMap.EmptyMapException;
+import fr.sazaju.vheditor.translation.parsing.MapEntry;
 import fr.vergne.logging.LoggerConfiguration;
 
 @SuppressWarnings("serial")
@@ -99,23 +97,33 @@ public class MapContentPanel extends JPanel {
 	public int getCurrentEntryIndex() {
 		JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this);
 		Component focusOwner = frame.getFocusOwner();
-		EntryPanel[] entries = getEntryPanels();
+		Iterator<EntryWrapper> iterator = getEntryIterator();
 		if (focusOwner instanceof TranslationArea) {
-			while (!(focusOwner instanceof EntryPanel)) {
-				focusOwner = focusOwner.getParent();
-			}
-			return Arrays.asList(entries).indexOf(focusOwner);
-		} else {
-			int count = 0;
-			Rectangle visible = mapContentArea.getVisibleRect();
-			for (EntryPanel entry : entries) {
-				Rectangle bounds = entry.getBounds();
-				if (visible.y < bounds.y + bounds.height) {
-					return count;
+			int index = 0;
+			while (iterator.hasNext()) {
+				EntryWrapper entry = iterator.next();
+				if (entry.contains(focusOwner)) {
+					return index;
 				} else {
-					// not yet the searched entry
+					index++;
 				}
-				count++;
+			}
+			throw new RuntimeException(
+					"Translation area not found in entries' components.");
+		} else {
+			int index = 0;
+			Rectangle visible = mapContentArea.getVisibleRect();
+			while (iterator.hasNext()) {
+				EntryWrapper entry = iterator.next();
+				for (Component component : entry) {
+					Rectangle bounds = component.getBounds();
+					if (visible.y < bounds.y + bounds.height) {
+						return index;
+					} else {
+						// not yet the searched entry
+					}
+				}
+				index++;
 			}
 		}
 
@@ -127,50 +135,118 @@ public class MapContentPanel extends JPanel {
 
 			@Override
 			public void run() {
-				EntryPanel[] entries = getEntryPanels();
-				int index = Math.min(Math.max(entryIndex, 0),
-						entries.length - 1);
-				JScrollBar scroll = mapContentScroll.getVerticalScrollBar();
-				if (index == 0) {
-					scroll.setValue(0);
-					entries[0].getTranslationArea().requestFocusInWindow();
+				Iterator<EntryWrapper> iterator = getEntryIterator();
+				EntryWrapper entry = null;
+				for (int i = 0; i <= entryIndex; i++) {
+					entry = iterator.next();
+				}
+
+				if (entryIndex == 0) {
+					mapContentScroll.getVerticalScrollBar().setValue(0);
 				} else {
 					Rectangle visible = mapContentArea.getVisibleRect();
-					Component target = entries[index];
+					Component target = entry.getHeader();
 					visible.y = 0;
 					while (target != mapContentArea) {
 						visible.y += target.getBounds().y;
 						target = target.getParent();
 					}
 					mapContentArea.scrollRectToVisible(visible);
-					entries[index].getTranslationArea().requestFocusInWindow();
 				}
+
+				entry.getTranslationArea().requestFocusInWindow();
 			}
 		});
 	}
 
 	/**
 	 * 
-	 * @return all the {@link EntryPanel}s, used as well as unused, in their
-	 *         current order
+	 * @return an {@link Iterator} which provides the {@link List}s of
+	 *         {@link Component}s corresponding to each {@link MapEntry}, in the
+	 *         current order.
 	 */
-	private EntryPanel[] getEntryPanels() {
-		Component[] components = mapContentArea.getComponents();
-		if (components.length == 0) {
-			return new EntryPanel[0];
-		} else {
-			Container mapPanel = ((Container) components[0]);
-			Component[] entries = ((Container) mapPanel.getComponent(1))
+	private Iterator<EntryWrapper> getEntryIterator() {
+		return new Iterator<EntryWrapper>() {
+
+			Component[] components = ((JPanel) mapContentArea.getComponent(0))
 					.getComponents();
-			if (mapPanel.getComponentCount() >= 3) {
-				Component[] unused = ((Container) mapPanel.getComponent(3))
-						.getComponents();
-				entries = ArrayUtils.addAll(entries, unused);
-			} else {
-				// no unused entries
+			int nextIndex = 0;
+
+			@Override
+			public void remove() {
+				throw new RuntimeException(
+						"You cannot remove an entry from this iterator.");
 			}
-			return Arrays.copyOf(entries, entries.length, EntryPanel[].class);
+
+			@Override
+			public EntryWrapper next() {
+				searchNext();
+
+				List<Component> list = new ArrayList<Component>();
+				Component component;
+				do {
+					component = components[nextIndex];
+					list.add(component);
+					nextIndex++;
+				} while (!(component instanceof JTextArea && ((JTextArea) component)
+						.getText().startsWith("# END STRING")));
+
+				searchNext();
+
+				return new EntryWrapper(list);
+			}
+
+			private void searchNext() {
+				Component component = null;
+				while (components.length - 1 > nextIndex
+						&& !(component instanceof JTextArea && ((JTextArea) component)
+								.getText().startsWith("# TEXT STRING"))) {
+					component = components[nextIndex];
+					nextIndex++;
+				}
+				if (nextIndex == components.length) {
+					// end reached
+				} else {
+					nextIndex--;
+				}
+			}
+
+			@Override
+			public boolean hasNext() {
+				searchNext();
+				return components.length > nextIndex;
+			}
+		};
+	}
+
+	private static class EntryWrapper implements Iterable<Component> {
+		private final List<Component> components;
+
+		public EntryWrapper(List<Component> components) {
+			this.components = new ArrayList<Component>(components);
 		}
+
+		public Component getHeader() {
+			return components.get(0);
+		}
+
+		public UntranslatedTag getUntranslatedTag() {
+			return (UntranslatedTag) components.get(1);
+		}
+
+		public TranslationArea getTranslationArea() {
+			return (TranslationArea) components.get(components.size() - 2);
+		}
+
+		public boolean contains(Component component) {
+			return components.contains(component);
+		}
+
+		@Override
+		public Iterator<Component> iterator() {
+			return components.iterator();
+		}
+
 	}
 
 	public void goToNextUntranslatedEntry(boolean relyOnTags) {
@@ -213,8 +289,9 @@ public class MapContentPanel extends JPanel {
 							// TODO add map title (English label)
 							mapTitleField.setText(mapFile.getName());
 							mapContentArea.removeAll();
-							mapContentArea.add(GuiBuilder
-									.instantiateMapGui(map));
+							GuiBuilder builder = new GuiBuilder();
+							builder.setWithMap(map);
+							mapContentArea.add(builder.instantiate());
 							goToEntry(entryIndex);
 						}
 					} catch (EmptyMapException e) {
@@ -250,9 +327,11 @@ public class MapContentPanel extends JPanel {
 
 	public void save() {
 		logger.info("Applying modifications...");
-		for (EntryPanel panel : getEntryPanels()) {
-			panel.getTranslationArea().save();
-			panel.getTranslationTag().save();
+		Iterator<EntryWrapper> iterator = getEntryIterator();
+		while (iterator.hasNext()) {
+			EntryWrapper entry = iterator.next();
+			entry.getUntranslatedTag().save();
+			entry.getTranslationArea().save();
 		}
 		logger.info("Saving map to " + map.getBaseFile() + "...");
 		map.save();
@@ -318,26 +397,21 @@ public class MapContentPanel extends JPanel {
 	}
 
 	public boolean isModified() {
-		for (EntryPanel entry : getEntryPanels()) {
-			for (Component component : entry.getComponents()) {
-				if (component instanceof TranslationArea) {
-					if (((TranslationArea) component).isModified()) {
-						return true;
-					} else {
-						// look for another one
-					}
-				} else if (component instanceof TranslationTag) {
-					if (((TranslationTag) component).isModified()) {
-						return true;
-					} else {
-						// look for another one
-					}
+		if (mapContentArea.getComponentCount() == 0) {
+			return false;
+		} else {
+			Iterator<EntryWrapper> iterator = getEntryIterator();
+			while (iterator.hasNext()) {
+				EntryWrapper entry = iterator.next();
+				if (entry.getTranslationArea().isModified()
+						|| entry.getUntranslatedTag().isModified()) {
+					return true;
 				} else {
-					// irrelevant component
+					// check others
 				}
 			}
+			return false;
 		}
-		return false;
 	}
 
 	private final Collection<MapSavedListener> listeners = new HashSet<MapSavedListener>();

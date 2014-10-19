@@ -4,9 +4,9 @@ import fr.vergne.parsing.layer.standard.Atom;
 import fr.vergne.parsing.layer.standard.Suite;
 import fr.vergne.parsing.layer.util.Newline;
 
-public class StartLine extends Suite {
+public class StartFlag extends Suite {
 
-	public StartLine() {
+	public StartFlag() {
 		super(new Atom("# TEXT STRING"), new Newline());
 	}
 }

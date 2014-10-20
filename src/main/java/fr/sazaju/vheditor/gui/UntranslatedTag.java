@@ -3,6 +3,8 @@ package fr.sazaju.vheditor.gui;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
+import java.util.Collection;
+import java.util.HashSet;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
@@ -18,6 +20,7 @@ import fr.sazaju.vheditor.translation.TranslationEntry;
 public class UntranslatedTag extends JPanel {
 
 	private final TranslationEntry entry;
+	private final Collection<SwitchListener> listeners = new HashSet<SwitchListener>();
 	private boolean isMarked;
 
 	public UntranslatedTag(final TranslationEntry entry) {
@@ -36,12 +39,16 @@ public class UntranslatedTag extends JPanel {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				entry.setMarkedAsUntranslated(!entry.isMarkedAsUntranslated());
+				boolean isActivated = !entry.isMarkedAsUntranslated();
+				entry.setMarkedAsUntranslated(isActivated);
 				/*
 				 * Set a different text than the current value to force the
 				 * generation of the update event.
 				 */
 				tag.setText("" + entry.isMarkedAsUntranslated());
+				for (SwitchListener listener : listeners) {
+					listener.switched(isActivated);
+				}
 			}
 		}) {
 			@Override
@@ -66,7 +73,7 @@ public class UntranslatedTag extends JPanel {
 		// now we can reduce the size of the button
 		int length = tag.getFontMetrics(tag.getFont()).getHeight();
 		toggleButton.setPreferredSize(new Dimension(length, length));
-		
+
 		setOpaque(false);
 	}
 
@@ -76,5 +83,21 @@ public class UntranslatedTag extends JPanel {
 
 	public void save() {
 		isMarked = entry.isMarkedAsUntranslated();
+	}
+
+	public boolean isMarked() {
+		return entry.isMarkedAsUntranslated();
+	}
+
+	public static interface SwitchListener {
+		public void switched(boolean isNowActivated);
+	}
+
+	public void addSwitchListener(SwitchListener listener) {
+		listeners.add(listener);
+	}
+
+	public void removeSwitchListener(SwitchListener listener) {
+		listeners.remove(listener);
 	}
 }

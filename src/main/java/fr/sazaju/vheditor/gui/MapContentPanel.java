@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -27,6 +28,7 @@ import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EtchedBorder;
 
+import fr.sazaju.vheditor.gui.MapContentPanelBuilder.JLineNumber;
 import fr.sazaju.vheditor.translation.TranslationEntry;
 import fr.sazaju.vheditor.translation.TranslationMap;
 import fr.sazaju.vheditor.translation.parsing.BackedTranslationMap;
@@ -166,63 +168,74 @@ public class MapContentPanel extends JPanel {
 	 *         current order.
 	 */
 	private Iterator<EntryWrapper> getEntryIterator() {
-		return new Iterator<EntryWrapper>() {
+		if (mapContentArea.getComponentCount() == 0) {
+			return Collections.<EntryWrapper> emptyList().iterator();
+		} else {
+			return new Iterator<EntryWrapper>() {
 
-			Component[] components = ((JPanel) mapContentArea.getComponent(0))
-					.getComponents();
-			int nextIndex = 0;
+				private final Component[] components = ((JPanel) mapContentArea
+						.getComponent(0)).getComponents();
+				private int nextIndex = 0;
 
-			@Override
-			public void remove() {
-				throw new RuntimeException(
-						"You cannot remove an entry from this iterator.");
-			}
-
-			@Override
-			public EntryWrapper next() {
-				searchNext();
-
-				List<Component> list = new ArrayList<Component>();
-				Component component;
-				do {
-					component = components[nextIndex];
-					list.add(component);
-					nextIndex++;
-				} while (!(component instanceof JTextArea && ((JTextArea) component)
-						.getText().startsWith("# END STRING")));
-
-				searchNext();
-
-				return new EntryWrapper(list);
-			}
-
-			private void searchNext() {
-				Component component = null;
-				while (components.length - 1 > nextIndex
-						&& !(component instanceof JTextArea && ((JTextArea) component)
-								.getText().startsWith("# TEXT STRING"))) {
-					component = components[nextIndex];
-					nextIndex++;
+				@Override
+				public void remove() {
+					throw new RuntimeException(
+							"You cannot remove an entry from this iterator.");
 				}
-				if (nextIndex == components.length) {
-					// end reached
-				} else {
-					nextIndex--;
-				}
-			}
 
-			@Override
-			public boolean hasNext() {
-				searchNext();
-				return components.length > nextIndex;
-			}
-		};
+				@Override
+				public EntryWrapper next() {
+					searchNext();
+
+					List<Component> list = new ArrayList<Component>();
+					Component component;
+					do {
+						component = components[nextIndex];
+						if (component instanceof JLineNumber) {
+							// line display, not a map component
+						} else {
+							logger.fine("Store " + nextIndex + ": " + component);
+							list.add(component);
+						}
+						nextIndex++;
+					} while (!(component instanceof JTextArea && ((JTextArea) component)
+							.getText().startsWith("# END STRING")));
+
+					return new EntryWrapper(list);
+				}
+
+				private void searchNext() {
+					Component component = null;
+					while (nextIndex < components.length
+							&& !(component instanceof JTextArea && ((JTextArea) component)
+									.getText().startsWith("# TEXT STRING"))) {
+						component = components[nextIndex];
+						logger.fine("Check " + nextIndex + ": " + component);
+						nextIndex++;
+					}
+					if (nextIndex == components.length) {
+						// end reached
+					} else {
+						nextIndex--;
+					}
+				}
+
+				@Override
+				public boolean hasNext() {
+					searchNext();
+					return nextIndex < components.length;
+				}
+			};
+		}
 	}
 
 	private static class EntryWrapper implements Iterable<Component> {
 		private final List<Component> components;
 
 		public EntryWrapper(List<Component> components) {
+			if (components.size() == 1) {
+				throw new IllegalArgumentException();
+			}
 			this.components = new ArrayList<Component>(components);
 		}
 
@@ -289,7 +302,7 @@ public class MapContentPanel extends JPanel {
 							// TODO add map title (English label)
 							mapTitleField.setText(mapFile.getName());
 							mapContentArea.removeAll();
-							GuiBuilder builder = new GuiBuilder();
+							MapContentPanelBuilder builder = new MapContentPanelBuilder();
 							builder.setWithMap(map);
 							mapContentArea.add(builder.instantiate());
 							goToEntry(entryIndex);
@@ -397,21 +410,17 @@ public class MapContentPanel extends JPanel {
 	}
 
 	public boolean isModified() {
-		if (mapContentArea.getComponentCount() == 0) {
-			return false;
-		} else {
-			Iterator<EntryWrapper> iterator = getEntryIterator();
-			while (iterator.hasNext()) {
-				EntryWrapper entry = iterator.next();
-				if (entry.getTranslationArea().isModified()
-						|| entry.getUntranslatedTag().isModified()) {
-					return true;
-				} else {
-					// check others
-				}
+		Iterator<EntryWrapper> iterator = getEntryIterator();
+		while (iterator.hasNext()) {
+			EntryWrapper entry = iterator.next();
+			if (entry.getTranslationArea().isModified()
+					|| entry.getUntranslatedTag().isModified()) {
+				return true;
+			} else {
+				// check others
 			}
-			return false;
 		}
+		return false;
 	}
 
 	private final Collection<MapSavedListener> listeners = new HashSet<MapSavedListener>();

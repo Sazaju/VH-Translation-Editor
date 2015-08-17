@@ -2,10 +2,10 @@ package fr.sazaju.vheditor.gui;
 
 import java.io.File;
 
+import fr.sazaju.vheditor.VHMap;
+import fr.sazaju.vheditor.VHMap.VHEntry;
 import fr.sazaju.vheditor.VHProject;
 import fr.sazaju.vheditor.gui.VHGuiBuilder.MapPanel;
-import fr.sazaju.vheditor.map.VHEntry;
-import fr.sazaju.vheditor.map.VHMap;
 import fr.vergne.translation.TranslationMap;
 import fr.vergne.translation.editor.Editor;
 import fr.vergne.translation.editor.content.MapComponentFactory;
@@ -25,7 +25,8 @@ public class VHEditor extends Editor<File, VHEntry, VHMap, VHProject> {
 
 			@Override
 			public MapPanel createMapComponent(TranslationMap<?> map) {
-				return (MapPanel) VHGuiBuilder.instantiateMapGui((VHMap) map);
+				return (MapPanel) VHGuiBuilder
+						.instantiateMapComponent((VHMap) map);
 			}
 
 		});

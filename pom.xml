@@ -11,8 +11,8 @@
 	<url>https://github.com/sazaju/VH-Translation-Editor</url>
 
 	<scm>
-		<connection>scm:git:git://github.com/sazaju/VH-Translation-Editor.git</connection>
-		<developerConnection>scm:git:git://github.com/sazaju/VH-Translation-Editor.git</developerConnection>
+		<connection>scm:git:https://sazaju@github.com/sazaju/VH-Translation-Editor.git</connection>
+		<developerConnection>scm:git:https://sazaju@github.com/sazaju/VH-Translation-Editor.git</developerConnection>
 		<url>scm:git:git://github.com/sazaju/VH-Translation-Editor.git</url>
 	</scm>
 
@@ -41,14 +41,14 @@
 		<dependency>
 			<groupId>fr.matthieu-vergne</groupId>
 			<artifactId>translation-core</artifactId>
-			<version>1.0</version>
+			<version>1.1</version>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>fr.matthieu-vergne</groupId>
 			<artifactId>translation-editor</artifactId>
-			<version>1.0</version>
+			<version>1.1</version>
 		</dependency>
 		<dependency>
 			<groupId>fr.matthieu-vergne</groupId>
@@ -58,7 +58,7 @@
 		<dependency>
 			<groupId>fr.matthieu-vergne</groupId>
 			<artifactId>parsing-core</artifactId>
-			<version>2.2</version>
+			<version>3.1</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -84,7 +84,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>fr.sazaju.vheditor.gui.Gui</mainClass>
+							<mainClass>fr.sazaju.vheditor.gui.VHEditor</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>

@@ -2,7 +2,6 @@ package fr.sazaju.vheditor;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.MalformedURLException;
@@ -10,6 +9,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,12 +19,12 @@ import javax.swing.JOptionPane;
 import fr.sazaju.vheditor.html.MapLabelPage;
 import fr.sazaju.vheditor.html.MapRow;
 import fr.sazaju.vheditor.html.MapTable;
-import fr.sazaju.vheditor.map.VHMap;
 import fr.vergne.logging.LoggerConfiguration;
 import fr.vergne.parsing.layer.exception.ParsingException;
 import fr.vergne.translation.editor.Editor;
 import fr.vergne.translation.editor.tool.FileBasedProperties;
 import fr.vergne.translation.impl.MapFilesProject;
+import fr.vergne.translation.impl.PatternFileMap;
 import fr.vergne.translation.util.MultiReader;
 import fr.vergne.translation.util.impl.SimpleFeature;
 
@@ -42,11 +42,8 @@ public class VHProject extends MapFilesProject<VHMap> {
 
 			@Override
 			public VHMap read(File file) {
-				try {
-					return new VHMap(file);
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
+				PatternFileMap.logger.setLevel(Level.OFF);
+				return new VHMap(file);
 			}
 		});
 

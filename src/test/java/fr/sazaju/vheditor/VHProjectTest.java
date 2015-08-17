@@ -3,7 +3,6 @@ package fr.sazaju.vheditor;
 import static org.junit.Assert.*;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,8 +10,6 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
-import fr.sazaju.vheditor.map.VHEntry;
-import fr.sazaju.vheditor.map.VHMap;
 import fr.vergne.translation.TranslationMetadata.Field;
 import fr.vergne.translation.TranslationProject;
 import fr.vergne.translation.TranslationProjectTest;
@@ -31,37 +28,9 @@ public class VHProjectTest extends TranslationProjectTest<File, VHMap> {
 		tempDirectory.mkdir();
 
 		File templateDirectory = new File("VH/branches/working");
-		FileFilter fileFilter;
-		if (templateDirectory.list().length > 50) {
-			fileFilter = new FileFilter() {
-
-				@Override
-				public boolean accept(File file) {
-					/*
-					 * Restrict to a reduced set of small files + the biggest
-					 * file, otherwise it takes an eternity to test.
-					 */
-					return file.length() < 1000
-							|| file.getName().equals(
-									"RPG_RT_COMMONEVENTDATA.txt");
-				}
-			};
-		} else {
-			fileFilter = new FileFilter() {
-
-				@Override
-				public boolean accept(File file) {
-					/*
-					 * The map files are already reduced, so use all of them.
-					 */
-					return true;
-				}
-			};
-		}
 
 		try {
-			FileUtils.copyDirectory(templateDirectory, tempDirectory,
-					fileFilter);
+			FileUtils.copyDirectory(templateDirectory, tempDirectory);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -71,7 +40,7 @@ public class VHProjectTest extends TranslationProjectTest<File, VHMap> {
 	@SuppressWarnings("unchecked")
 	@Override
 	protected <T> T createNewEditableFieldValue(Field<T> field, T currentValue) {
-		if (field == VHEntry.MARKED_AS_UNTRANSLATED) {
+		if (field == VHMap.MARKED_AS_UNTRANSLATED) {
 			return (T) (Boolean) !((Boolean) currentValue);
 		} else {
 			throw new RuntimeException("The field " + field

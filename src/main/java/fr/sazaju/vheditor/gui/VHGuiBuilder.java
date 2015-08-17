@@ -1,34 +1,19 @@
 package fr.sazaju.vheditor.gui;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
 
-import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
-import fr.sazaju.vheditor.map.AdviceLine;
-import fr.sazaju.vheditor.map.ContentBlock;
-import fr.sazaju.vheditor.map.ContextLine;
-import fr.sazaju.vheditor.map.EndLine;
-import fr.sazaju.vheditor.map.EntryLoop;
-import fr.sazaju.vheditor.map.MapHeader;
-import fr.sazaju.vheditor.map.StartLine;
-import fr.sazaju.vheditor.map.TranslationLine;
-import fr.sazaju.vheditor.map.UntranslatedLine;
-import fr.sazaju.vheditor.map.UnusedTransLine;
-import fr.sazaju.vheditor.map.VHEntry;
-import fr.sazaju.vheditor.map.VHMap;
-import fr.vergne.parsing.layer.Layer;
-import fr.vergne.parsing.layer.standard.Loop;
-import fr.vergne.parsing.layer.standard.Option;
-import fr.vergne.parsing.layer.standard.Suite;
-import fr.vergne.parsing.layer.util.Newline;
+import fr.sazaju.vheditor.VHMap;
+import fr.sazaju.vheditor.VHMap.VHEntry;
+import fr.sazaju.vheditor.VHMap.VHMetadata;
 import fr.vergne.translation.TranslationEntry;
 import fr.vergne.translation.editor.content.EntryComponentFactory.EntryComponent;
 import fr.vergne.translation.editor.content.MapComponentFactory.MapComponent;
@@ -38,7 +23,7 @@ public class VHGuiBuilder {
 
 	private static final Color UNUSED_COLOR = Color.MAGENTA;
 
-	public static Component instantiateMapGui(VHMap map) {
+	public static MapPanel instantiateMapComponent(VHMap map) {
 		MapPanel panel = new MapPanel();
 		panel.setOpaque(false);
 		panel.setLayout(new GridBagLayout());
@@ -48,106 +33,86 @@ public class VHGuiBuilder {
 		constraints.gridx = 0;
 		constraints.gridy = GridBagConstraints.RELATIVE;
 
-		MapHeader header = map.get(0);
-		JLabel headerLine = new JLabel(header.getContent());
-		panel.add(headerLine, constraints);
+		panel.add(new JLabel("# RPGMAKER TRANS PATCH FILE VERSION 2.0"),
+				constraints);
+		int size = map.size() + map.unusedSize();
+		for (int index = 0; index < size; index++) {
+			VHEntry entry = map.getEntry(index);
+			EntryPanel entryPanel = instantiateEntryComponent(entry);
 
-		for (VHEntry mapEntry : (EntryLoop) map.get(1)) {
-			panel.add(instantiateEntryGui(mapEntry), constraints);
-		}
+			String extraText = map.getAfterEntry(index);
+			addExtraLinesBasedOnText(entryPanel, extraText, constraints);
 
-		Option<Suite> option = map.get(2);
-		if (!option.isPresent()) {
-			// no unused entries
-		} else {
-			UnusedTransLine unusedHeader = option.getOption().get(0);
-			JLabel unusedLabel = new JLabel(unusedHeader.getContent());
-			unusedLabel.setOpaque(true);
-			unusedLabel.setBackground(UNUSED_COLOR);
-			panel.add(unusedLabel, constraints);
-
-			JPanel unusedPanel = new JPanel();
-			unusedPanel.setOpaque(true);
-			unusedPanel.setBackground(UNUSED_COLOR);
-			unusedPanel.setLayout(new BoxLayout(unusedPanel,
-					BoxLayout.PAGE_AXIS));
-			unusedPanel.setAlignmentX(JPanel.LEFT_ALIGNMENT);
-			for (VHEntry mapEntry : (EntryLoop) option.getOption().get(1)) {
-				unusedPanel.add(instantiateEntryGui(mapEntry));
-			}
-			panel.add(unusedPanel, constraints);
+			panel.add(entryPanel, constraints);
 		}
 		return panel;
 	}
 
-	private static Component instantiateEntryGui(VHEntry mapEntry) {
+	private static void addExtraLinesBasedOnText(EntryPanel entryPanel,
+			String extraText, GridBagConstraints constraints) {
+		extraText = extraText.replaceAll(
+				"((\r\n)|(\n\r)|((?<!\n)\r(?!\n))|((?<!\r)\n(?!\r)))", "\n");
+		extraText = "." + extraText + ".";
+		LinkedList<String> tokens = new LinkedList<>(Arrays.asList(extraText
+				.split("\n")));
+		tokens.removeFirst();
+		tokens.removeLast();
+		for (String line : tokens) {
+			if (line.isEmpty()) {
+				line = " ";
+			} else {
+				// display line as is
+			}
+			entryPanel.add(new JLabel(line), constraints);
+		}
+	}
+
+	private static EntryPanel instantiateEntryComponent(VHEntry entry) {
+		VHMetadata metadata = entry.getMetadata();
+
 		EntryPanel panel = new EntryPanel();
-		panel.setOpaque(false);
+		if (entry.isUsed()) {
+			panel.setOpaque(false);
+		} else {
+			panel.setOpaque(true);
+			panel.setBackground(UNUSED_COLOR);
+		}
 		panel.setLayout(new GridBagLayout());
 		GridBagConstraints constraints = new GridBagConstraints();
 		constraints.gridx = 0;
 		constraints.anchor = GridBagConstraints.LINE_START;
 		constraints.fill = GridBagConstraints.HORIZONTAL;
 		constraints.weightx = 1;
-		panel.add(instantiateEntryGui(mapEntry.get(0), mapEntry), constraints);
-		panel.add(instantiateEntryGui(mapEntry.get(1), mapEntry), constraints);
-		panel.add(instantiateEntryGui(mapEntry.get(2), mapEntry), constraints);
-		panel.add(instantiateEntryGui(mapEntry.get(3), mapEntry), constraints);
-		JTextArea original = new JTextArea(mapEntry.getOriginalContent());
+		panel.add(new JLabel("# TEXT STRING"), constraints);
+		panel.add(new UntranslatedTag<TranslationEntry<?>>(metadata),
+				constraints);
+		panel.add(new JLabel("# CONTEXT : " + metadata.get(VHMap.CONTEXT)),
+				constraints);
+		Integer limit1 = metadata.get(VHMap.CHAR_LIMIT_NO_FACE);
+		Integer limit2 = metadata.get(VHMap.CHAR_LIMIT_FACE);
+		if (limit1 == null) {
+			/*
+			 * We add an empty label to keep the same number of components,
+			 * independently of the content of the entry, but this label should
+			 * have a zero-size, so it does not appear.
+			 */
+			panel.add(new JLabel(), constraints);
+		} else if (limit2 == null) {
+			panel.add(new JLabel("# ADVICE : " + limit1 + " char limit"),
+					constraints);
+		} else {
+			panel.add(new JLabel("# ADVICE : " + limit1 + " char limit ("
+					+ limit2 + " if face)"), constraints);
+		}
+		JTextArea original = new JTextArea(entry.getOriginalContent());
 		original.setEditable(false);
 		panel.add(original, constraints);
-		panel.add(instantiateEntryGui(mapEntry.get(5), mapEntry), constraints);
-		Collection<Integer> limits = TranslationArea.retrieveLimits(mapEntry,
-				Arrays.asList(VHEntry.CHAR_LIMIT_NO_FACE,
-						VHEntry.CHAR_LIMIT_FACE));
-		panel.add(new TranslationArea(mapEntry, limits), constraints);
-		panel.add(instantiateEntryGui(mapEntry.get(7), mapEntry), constraints);
+		panel.add(new JLabel("# TRANSLATION"), constraints);
+		Collection<Integer> limits = TranslationArea.retrieveLimits(entry,
+				Arrays.asList(VHMap.CHAR_LIMIT_NO_FACE, VHMap.CHAR_LIMIT_FACE));
+		panel.add(new TranslationArea(entry, limits), constraints);
+		panel.add(new JLabel("# END STRING"), constraints);
 		return panel;
-	}
-
-	public static Component instantiateEntryGui(Layer layer,
-			TranslationEntry<?> entry) {
-		if (layer instanceof StartLine || layer instanceof ContextLine
-				|| layer instanceof AdviceLine
-				|| layer instanceof TranslationLine) {
-			return new JLabel(layer.getContent());
-		} else if (layer instanceof EndLine) {
-			JPanel panel = new JPanel();
-			panel.setOpaque(false);
-			panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
-			panel.setAlignmentX(JPanel.LEFT_ALIGNMENT);
-			panel.setOpaque(false);
-
-			EndLine end = (EndLine) layer;
-			panel.add(new JLabel(layer.getContent()));
-
-			Loop<Newline> newlines = end.get(1);
-			for (int i = 1; i < newlines.size(); i++) {
-				panel.add(new JLabel(" "));
-			}
-			return panel;
-		} else if (layer instanceof ContentBlock) {
-			String clazz = layer.getClass().getSimpleName();
-			throw new IllegalArgumentException(
-					clazz
-							+ " elements have different implementations. Use this method on a complete entry rather than on the specific "
-							+ clazz + ".");
-		} else if (layer instanceof Option) {
-			Option<?> option = (Option<?>) layer;
-			Layer sublayer = option.getOption();
-			if (sublayer instanceof UntranslatedLine) {
-				return new TranslationTag<TranslationEntry<?>>(entry);
-			} else if (sublayer instanceof AdviceLine) {
-				return option.isPresent() ? instantiateEntryGui(sublayer, entry)
-						: new JLabel();
-			} else {
-				throw new IllegalArgumentException("Unmanaged Option: "
-						+ sublayer.getClass());
-			}
-		} else {
-			throw new IllegalArgumentException("Unmanaged Layer: "
-					+ layer.getClass());
-		}
 	}
 
 	@SuppressWarnings("serial")
@@ -156,15 +121,6 @@ public class VHGuiBuilder {
 		@Override
 		public TranslationArea getTranslationComponent() {
 			return (TranslationArea) getComponent(6);
-		}
-
-		public TranslationEntry<?> getEntry() {
-			return getTranslationComponent().getEntry();
-		}
-
-		@SuppressWarnings("unchecked")
-		public TranslationTag<TranslationEntry<?>> getTranslationTag() {
-			return (TranslationTag<TranslationEntry<?>>) getComponent(1);
 		}
 	}
 

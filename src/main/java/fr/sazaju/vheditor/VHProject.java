@@ -19,7 +19,6 @@ import javax.swing.JOptionPane;
 import fr.sazaju.vheditor.html.MapLabelPage;
 import fr.sazaju.vheditor.html.MapRow;
 import fr.sazaju.vheditor.html.MapTable;
-import fr.vergne.logging.LoggerConfiguration;
 import fr.vergne.parsing.layer.exception.ParsingException;
 import fr.vergne.translation.editor.Editor;
 import fr.vergne.translation.editor.tool.FileBasedProperties;
@@ -30,7 +29,8 @@ import fr.vergne.translation.util.impl.SimpleFeature;
 
 public class VHProject extends MapFilesProject<VHMap> {
 
-	public static final Logger logger = LoggerConfiguration.getSimpleLogger();
+	public static final Logger logger = Logger.getLogger(VHProject.class
+			.getName());
 	private static final String CONFIG_LABEL_SOURCE = "labelSource";
 	private static final String CACHE_LABEL_PREFIX = "label.";
 	private static final String CONFIG_LABEL_LAST_UPDATE = "lastLabelUpdate";

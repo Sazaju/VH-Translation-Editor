@@ -12,7 +12,7 @@
 	<scm>
 		<connection>scm:git:https://sazaju@github.com/sazaju/VH-Translation-Editor.git</connection>
 		<developerConnection>scm:git:https://sazaju@github.com/sazaju/VH-Translation-Editor.git</developerConnection>
-		<url>scm:git:git://github.com/sazaju/VH-Translation-Editor.git</url>
+		<url>scm:git:https://github.com/sazaju/VH-Translation-Editor.git</url>
 	</scm>
 
 	<issueManagement>

@@ -194,7 +194,6 @@ public class VHProject extends MapFilesProject<VHMap> {
 		});
 	}
 
-	@SuppressWarnings("serial")
 	private static List<File> retrieveFiles(File directory) {
 		File[] f = directory.listFiles(new FileFilter() {
 
@@ -211,12 +210,7 @@ public class VHProject extends MapFilesProject<VHMap> {
 		} else {
 			LinkedList<File> files = new LinkedList<>();
 			for (File file : f) {
-				files.add(new File(file.getPath()) {
-					@Override
-					public String toString() {
-						return this.getName();
-					}
-				});
+				files.add(new File(file.getPath()));
 			}
 			return files;
 		}

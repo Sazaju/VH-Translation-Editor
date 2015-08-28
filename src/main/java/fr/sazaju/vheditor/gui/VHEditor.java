@@ -6,7 +6,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
+import java.util.logging.Level;
 import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
 
@@ -21,6 +23,9 @@ import fr.vergne.translation.util.ProjectLoader;
 
 @SuppressWarnings("serial")
 public class VHEditor extends Editor<File, VHEntry, VHMap, VHProject> {
+
+	private static final Logger logger = Logger.getLogger(VHEditor.class
+			.getName());
 
 	public VHEditor() {
 		super(new ProjectLoader<VHProject>() {
@@ -73,10 +78,14 @@ public class VHEditor extends Editor<File, VHEntry, VHMap, VHProject> {
 			throw new RuntimeException(e);
 		}
 
-		new Runnable() {
+		new Thread(new Runnable() {
 			public void run() {
-				new VHEditor().setVisible(true);
+				try {
+					new VHEditor().setVisible(true);
+				} catch (Exception e) {
+					logger.log(Level.SEVERE, null, e);
+				}
 			}
-		}.run();
+		}).start();
 	}
 }

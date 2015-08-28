@@ -24,7 +24,9 @@ import fr.vergne.translation.editor.Editor;
 import fr.vergne.translation.editor.tool.FileBasedProperties;
 import fr.vergne.translation.impl.MapFilesProject;
 import fr.vergne.translation.impl.PatternFileMap;
+import fr.vergne.translation.util.MapNamer;
 import fr.vergne.translation.util.MultiReader;
+import fr.vergne.translation.util.impl.MapFileNamer;
 import fr.vergne.translation.util.impl.SimpleFeature;
 
 public class VHProject extends MapFilesProject<VHMap> {
@@ -54,6 +56,97 @@ public class VHProject extends MapFilesProject<VHMap> {
 					"https://www.assembla.com/spaces/VH/wiki/Map_List");
 		}
 		loadLabels(false);
+
+		addMapNamer(new MapFileNamer("File", "Use the file names of the maps."));
+		addMapNamer(new MapNamer<File>() {
+
+			@Override
+			public String getName() {
+				return "Label";
+			}
+
+			@Override
+			public String getDescription() {
+				return "Use the names of the maps as provided in the map "
+						+ "list of the Assembla project. It requires an Internet "
+						+ "connection to load the last version of the list.";
+			}
+
+			@Override
+			public String getNameFor(File file) {
+				String fileName = file.getName();
+				String label = cache.getProperty(CACHE_LABEL_PREFIX + fileName);
+				if (label == null) {
+					return "[" + fileName + "]";
+				} else {
+					return label;
+				}
+			}
+		});
+		addMapNamer(new MapNamer<File>() {
+
+			@Override
+			public String getName() {
+				return "Label [Number]";
+			}
+
+			@Override
+			public String getDescription() {
+				return "Use the names of the maps as provided in the map "
+						+ "list of the Assembla project followed by the number "
+						+ "of the map (the \"Xxx\" in \"MapXxx.txt\"). It "
+						+ "requires an Internet connection to load the last "
+						+ "version of the list.";
+			}
+
+			@Override
+			public String getNameFor(File file) {
+				String fileName = file.getName();
+				String label = cache.getProperty(CACHE_LABEL_PREFIX + fileName);
+
+				if (label == null) {
+					return "[" + fileName + "]";
+				} else if (fileName.matches("^Map.*\\.txt$")) {
+					int number = Integer.parseInt(fileName.substring(3,
+							fileName.length() - 4));
+					return label + " [" + number + "]";
+				} else {
+					return label + " [" + fileName + "]";
+				}
+			}
+		});
+		addMapNamer(new MapNamer<File>() {
+
+			@Override
+			public String getName() {
+				return "[Number] Label";
+			}
+
+			@Override
+			public String getDescription() {
+				return "Use the names of the maps as provided in the map "
+						+ "list of the Assembla project preceded by the number "
+						+ "of the map (the \"Xxx\" in \"MapXxx.txt\"). It "
+						+ "requires an Internet connection to load the last "
+						+ "version of the list.";
+			}
+
+			@Override
+			public String getNameFor(File file) {
+				String fileName = file.getName();
+				String label = cache.getProperty(CACHE_LABEL_PREFIX + fileName);
+
+				if (label == null) {
+					return "[" + fileName + "]";
+				} else if (fileName.matches("^Map.*\\.txt$")) {
+					int number = Integer.parseInt(fileName.substring(3,
+							fileName.length() - 4));
+					return "[" + number + "] " + label;
+				} else {
+					return "[" + fileName + "] " + label;
+				}
+			}
+		});
 
 		addFeature(new SimpleFeature("Source",
 				"Configure the source where to load the maps' labels from.") {
@@ -206,17 +299,6 @@ public class VHProject extends MapFilesProject<VHMap> {
 		}
 		cache.save();
 		logger.info("Labels saved: " + total);
-	}
-
-	@Override
-	public String getMapName(File file) {
-		return cache.getProperty(CACHE_LABEL_PREFIX + file.getName());
-	}
-
-	@Override
-	public void setMapName(File file, String name) {
-		throw new UnsupportedOperationException(
-				"Map names are retrieved another way, this method cannot be used anymore.");
 	}
 
 	private void displayError(String message) {

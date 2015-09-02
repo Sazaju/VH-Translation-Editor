@@ -10,14 +10,15 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
+import fr.sazaju.vheditor.VHMap.VHEntry;
 import fr.vergne.translation.TranslationMetadata.Field;
 import fr.vergne.translation.TranslationProject;
 import fr.vergne.translation.TranslationProjectTest;
 
-public class VHProjectTest extends TranslationProjectTest<File, VHMap> {
+public class VHProjectTest extends TranslationProjectTest<VHEntry, File, VHMap> {
 
 	@Override
-	protected TranslationProject<File, VHMap> createTranslationProject() {
+	protected TranslationProject<VHEntry, File, VHMap> createTranslationProject() {
 		File tempDirectory;
 		try {
 			tempDirectory = File.createTempFile("vhTest", "");

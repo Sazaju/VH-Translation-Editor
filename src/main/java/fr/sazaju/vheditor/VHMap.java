@@ -1,9 +1,7 @@
 package fr.sazaju.vheditor;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.NoSuchElementException;
 
 import fr.sazaju.vheditor.VHMap.VHEntry;
@@ -14,7 +12,6 @@ import fr.vergne.translation.TranslationMetadata.Field;
 import fr.vergne.translation.impl.PatternFileMap;
 import fr.vergne.translation.impl.PatternFileMap.PatternEntry;
 import fr.vergne.translation.impl.PatternFileMap.PatternMetadata;
-import fr.vergne.translation.util.EntryFilter;
 import fr.vergne.translation.util.Switcher;
 import fr.vergne.translation.util.impl.SmartStringSwitcher;
 
@@ -37,7 +34,6 @@ public class VHMap implements TranslationMap<VHEntry> {
 	private static final String translationRegex = "(?s)(?<=# TRANSLATION \r?\n)"
 			+ textRegex + "(?=\r?\n)";
 	private final PatternFileMap submap;
-	private final Collection<EntryFilter<VHEntry>> filters;
 	private final int startUnusedIndex;
 
 	static {
@@ -96,26 +92,6 @@ public class VHMap implements TranslationMap<VHEntry> {
 		}
 
 		startUnusedIndex = findUnusedIndex(submap);
-
-		this.filters = new LinkedList<>();
-		this.filters.add(new EntryFilter<VHEntry>() {
-
-			@Override
-			public String getName() {
-				return MARKED_AS_UNTRANSLATED.getName();
-			}
-
-			@Override
-			public String getDescription() {
-				return "Search for entries marked with #UNTRANSLATED.";
-			}
-
-			@Override
-			public boolean isRelevant(VHEntry entry) {
-				return entry.getMetadata().get(MARKED_AS_UNTRANSLATED);
-			}
-
-		});
 	}
 
 	private int findUnusedIndex(PatternFileMap submap) {
@@ -213,11 +189,6 @@ public class VHMap implements TranslationMap<VHEntry> {
 	@Override
 	public void resetAll() {
 		submap.resetAll();
-	}
-
-	@Override
-	public Collection<EntryFilter<VHEntry>> getEntryFilters() {
-		return filters;
 	}
 
 	public String getBeforeEntry(int index) {

@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 
 import javax.swing.JOptionPane;
 
+import fr.sazaju.vheditor.VHMap.VHEntry;
 import fr.sazaju.vheditor.html.MapLabelPage;
 import fr.sazaju.vheditor.html.MapRow;
 import fr.sazaju.vheditor.html.MapTable;
@@ -23,13 +24,15 @@ import fr.vergne.parsing.layer.exception.ParsingException;
 import fr.vergne.translation.editor.Editor;
 import fr.vergne.translation.editor.tool.FileBasedProperties;
 import fr.vergne.translation.impl.MapFilesProject;
+import fr.vergne.translation.impl.NoTranslationFilter;
 import fr.vergne.translation.impl.PatternFileMap;
+import fr.vergne.translation.util.EntryFilter;
 import fr.vergne.translation.util.MapNamer;
 import fr.vergne.translation.util.MultiReader;
 import fr.vergne.translation.util.impl.MapFileNamer;
 import fr.vergne.translation.util.impl.SimpleFeature;
 
-public class VHProject extends MapFilesProject<VHMap> {
+public class VHProject extends MapFilesProject<VHEntry, VHMap> {
 
 	public static final Logger logger = Logger.getLogger(VHProject.class
 			.getName());
@@ -172,7 +175,6 @@ public class VHProject extends MapFilesProject<VHMap> {
 				}
 			}
 		});
-
 		addFeature(new SimpleFeature("Update",
 				"Request the update of the labels from the label source.") {
 
@@ -192,6 +194,30 @@ public class VHProject extends MapFilesProject<VHMap> {
 				}
 			}
 		});
+
+		addEntryFilter(new EntryFilter<VHEntry>() {
+
+			@Override
+			public String getName() {
+				return VHMap.MARKED_AS_UNTRANSLATED.getName();
+			}
+
+			@Override
+			public String getDescription() {
+				return "Search for entries marked with #UNTRANSLATED.";
+			}
+
+			@Override
+			public boolean isRelevant(VHEntry entry) {
+				return entry.getMetadata().get(VHMap.MARKED_AS_UNTRANSLATED);
+			}
+
+			@Override
+			public String toString() {
+				return getName();
+			}
+		});
+		addEntryFilter(new NoTranslationFilter<VHEntry>());
 	}
 
 	private static List<File> retrieveFiles(File directory) {
